@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  web:
+    container_name: ${CONTAINERNGINX}
+    build:
+      context: ./docker/web
+      dockerfile: Dockerfile
+      args:
+        - WWW_DATA_USER=${APP_UID}
+        - WWW_DATA_GROUP=${APP_GID}
+        - ENVIRONMENT=${APP_ENV}
+    expose:
+      - "80"
+    volumes:
+      - ./:/var/www/
+      - ./docker/web/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/web/site.conf:/etc/nginx/sites-enabled/site.conf
+    ports:
+      - "${CONTAINERNGINXPORTA}:80"
+
+  php:
+    container_name: ${CONTAINERPHP}
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+      args:
+        - WWW_DATA_USER=${APP_UID}
+        - WWW_DATA_GROUP=${APP_GID}
+        - ENVIRONMENT=${APP_ENV}
+    expose:
+      - "9000"
+    environment:
+     UPLOAD_LIMIT: 64M
+    volumes:
+      - ./:/var/www/
+      - ./docker/php/php-fpm.conf:/usr/local/etc/php-fpm.conf
+      - ./docker/php/php_prod.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+      - ./docker/php/log/supervisord/:/var/log/supervisord/
